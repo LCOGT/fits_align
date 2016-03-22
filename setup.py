@@ -7,10 +7,9 @@ setup(
 	version='2.0dev',
 	packages=['alipy'],
 	description='alipy',
-	long_description=open('README.txt').read(),
+	long_description=open('README.md').read(),
 	author='Malte Tewes',
 	license='GPLv3',
 	author_email='malte.tewes[at]epfl.ch',
 	url='http://obswww.unige.ch/~tewes/alipy/'
 )
-
