@@ -264,9 +264,9 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
             logging.error("Field %s not available in your catalog file !" % (field))
             sys.exit(1)
 
-    logging.info("Number of sources in catalog : %i" % (mycat.nrows))
+    logging.info("Number of sources in catalog : %i" % (len(mycat)))
 
-    extnumbers = np.unique(mycat['EXT_NUMBER'].tonumpy())
+    extnumbers = np.unique(mycat['EXT_NUMBER'])
     logging.info("EXT_NUMBER values found in catalog : %s" % (", ".join(["%i" % val for val in extnumbers])))
 
     if len(extnumbers) > 1 and hdu == 0:
