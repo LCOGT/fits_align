@@ -277,7 +277,7 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
     propfields.append("FLAGS")
     propfields = list(set(propfields))
 
-    if mycat.nrows == 0:
+    if len(mycat) == 0:
         if verbose :
             print "No stars in the catalog :-("
     else :
