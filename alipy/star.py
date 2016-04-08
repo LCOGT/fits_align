@@ -520,7 +520,7 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
     dists = scipy.spatial.distance.cdist(ukn, ref) # Big table of distances between ukn and ref
     mindists = np.min(dists, axis=1) # For each ukn, the minimal distance
     minok = mindists <= r # booleans for each ukn
-     minokindexes = np.argwhere(minok).flatten() # indexes of uknstars with matches
+    minokindexes = np.argwhere(minok).flatten() # indexes of uknstars with matches
 
     if verbose:
         print "%i/%i stars with distance < r = %.1f (mean %.1f, median %.1f, std %.1f)" % (np.sum(minok), len(uknstars), r,
