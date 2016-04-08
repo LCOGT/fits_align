@@ -7,7 +7,7 @@ Dependencies:
  - sextractor (mandatory)
  - astropy (mandatory)
  - numpy (optional, needed for the array support)
- - pyfits (optional, needed for the array support)
+ - fits (optional, needed for the array support)
 
 
 Usage:
@@ -19,7 +19,7 @@ Usage:
 """
 
 import os, shutil
-from astropy.io import ascii
+from astropy.io import ascii, fits
 
 
 def _check_files(conf_file, conf_args, verbose=True):
@@ -86,8 +86,7 @@ def _setup(conf_file, params):
 
 def _setup_img(image, name):
     if not type(image) == type(''):
-        import pyfits
-        pyfits.writeto(name, image)
+        fits.writeto(name, image)
 
 
 def _get_cmd(img, img_ref, conf_args):
@@ -162,14 +161,12 @@ def run(image='', imageref='', params=[], conf_file=None, conf_args={}, keepcat=
     else: verbose = True
     _cleanup()
     if not type(image) == type(''):
-        import pyfits
         im_name = '.pysex.fits'
-        pyfits.writeto(im_name, image.transpose())
+        fits.writeto(im_name, image.transpose())
     else: im_name = image
     if not type(imageref) == type(''):
-        import pyfits
         imref_name = '.pysex.ref.fits'
-        pyfits.writeto(imref_name, imageref.transpose())
+        fits.writeto(imref_name, imageref.transpose())
     else: imref_name = imageref
     conf_file, conf_args = _check_files(conf_file, conf_args, verbose)
     _setup(conf_file, params)
