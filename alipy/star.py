@@ -9,8 +9,6 @@ import numpy as np
 import operator # For sorting
 import copy
 import itertools
-import scipy.linalg
-import scipy.spatial
 from astropy.io import ascii
 
 import logging
@@ -107,7 +105,7 @@ def printlist(starlist):
     Prints the stars ...
     """
     for source in starlist:
-        print source
+        print(source)
 
 def listtoarray(starlist, full=False):
     """
@@ -205,7 +203,7 @@ def readmancat(mancatfilepath, verbose="True"):
         table.append(Star(x=x, y=y, name=name, flux=flux))
 
 
-    if verbose: print "I've read", len(table), "sources from", os.path.split(mancatfilepath)[1]
+    if verbose: print("I've read", len(table), "sources from", os.path.split(mancatfilepath)[1])
     return table
 
 
@@ -279,7 +277,7 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
 
     if len(mycat) == 0:
         if verbose :
-            print "No stars in the catalog :-("
+            print("No stars in the catalog :-(")
     else :
         for i, num in enumerate(mycat['NUMBER']) :
             if mycat['FLAGS'][i] > maxflag :
@@ -301,7 +299,7 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
             returnlist.append(newstar)
 
     if verbose:
-        print "I've selected %i sources" % (len(returnlist))
+        print("I've selected %i sources" % (len(returnlist)))
 
     return returnlist
 
@@ -376,8 +374,8 @@ class SimpleTransform:
         [0.0, 0.0, 1.0]
         ])
 
-        inv = scipy.linalg.inv(homo)
-        #print inv
+        inv = np.linalg.inv(homo)
+        #print(inv)
 
         return SimpleTransform((inv[0,0], inv[1,0], inv[0,2], inv[1,2]))
 
@@ -392,7 +390,7 @@ class SimpleTransform:
         return (np.array([[self.v[0], -self.v[1]], [self.v[1], self.v[0]]]), self.v[2:4])
 
 
-    def apply(self, (x, y)):
+    def apply(self, x, y):
         """
         Applies the transform to a point (x, y)
         """
@@ -422,7 +420,7 @@ def fitstars(uknstars, refstars, verbose=True):
     assert len(uknstars) == len(refstars)
     if len(uknstars) < 2:
         if verbose:
-            print "Sorry I cannot fit a transform on less than 2 stars."
+            print("Sorry I cannot fit a transform on less than 2 stars.")
         return None
 
     # ukn * x = ref
@@ -437,9 +435,9 @@ def fitstars(uknstars, refstars, verbose=True):
     ukn = np.vstack(np.array(uknlist)) # a matrix
 
     if len(uknstars) == 2:
-        trans = scipy.linalg.solve(ukn, ref)
+        trans = np.linalg.solve(ukn, ref)
     else:
-        trans = scipy.linalg.lstsq(ukn, ref)[0]
+        trans = np.linalg.lstsq(ukn, ref)[0]
 
     return SimpleTransform(np.asarray(trans))
 
@@ -454,14 +452,14 @@ def fitstars(uknstars, refstars, verbose=True):
 #
 #         transukn = listtoarray(transuknstars)
 #         ref = listtoarray(refstars)
-#         #print "Unknown stars   : ", transukn.shape[0]
-#         #print "Reference stars : ", ref.shape[0]
+#         #print("Unknown stars   : ", transukn.shape[0])
+#         #print("Reference stars : ", ref.shape[0])
 #
 #         mindists = np.min(scipy.spatial.distance.cdist(ref, transukn), axis=0)
-#         print " must become smarter !!!!"
+#         print(" must become smarter !!!!")
 #         nbmatch = np.sum(mindists < r)
 #         if verbose:
-#             print "Tested match on %4i references : OK for %4i/%4i unknown stars (r = %.1f)." % (len(refstars), nbmatch, len(uknstars), r)
+#             print("Tested match on %4i references : OK for %4i/%4i unknown stars (r = %.1f)." % (len(refstars), nbmatch, len(uknstars), r))
 #
 #         return nbmatch
 #
@@ -488,11 +486,11 @@ def fitstars(uknstars, refstars, verbose=True):
 #                 matchuknstars.append(uknstars[i])
 #                 matchrefstars.append(refstars[uknmindistindexes[i]])
 #         if verbose:
-#             print "Refining (before / after) :"
-#             print self
+#             print("Refining (before / after) :")
+#             print(self)
 #         self.fitstars(matchuknstars, matchrefstars)
 #         if verbose:
-#             print self
+#             print(self)
 #
 
 
@@ -516,14 +514,14 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
         ukn = listtoarray(uknstars)
     ref = listtoarray(refstars)
 
-    dists = scipy.spatial.distance.cdist(ukn, ref) # Big table of distances between ukn and ref
+    dists = np.linalg.norm(ukn - ref) # Big table of distances between ukn and ref
     mindists = np.min(dists, axis=1) # For each ukn, the minimal distance
     minok = mindists <= r # booleans for each ukn
     minokindexes = np.argwhere(minok).flatten() # indexes of uknstars with matches
 
     if verbose:
-        print "%i/%i stars with distance < r = %.1f (mean %.1f, median %.1f, std %.1f)" % (np.sum(minok), len(uknstars), r,
-            np.mean(mindists[minok]), np.median(mindists[minok]), np.std(mindists[minok]))
+        print("%i/%i stars with distance < r = %.1f (mean %.1f, median %.1f, std %.1f)" % (np.sum(minok), len(uknstars), r,
+            np.mean(mindists[minok]), np.median(mindists[minok]), np.std(mindists[minok])))
 
     matchuknstars = []
     matchrefstars = []
@@ -539,7 +537,7 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
             pass # Then there is a companion, we skip it.
 
     if verbose:
-        print "Filtered for companions, keeping %i/%i matches" % (len(matchuknstars), np.sum(minok))
+        print("Filtered for companions, keeping %i/%i matches" % (len(matchuknstars), np.sum(minok)))
 
     if getstars==True:
         return (matchuknstars, matchrefstars)
@@ -598,24 +596,24 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
 #
 #     if len(starlist1) == 0:
 #         if verbose :
-#             print "Your starlist1 is empty, nothing to do."
+#             print("Your starlist1 is empty, nothing to do.")
 #         return returndict
 #
 #     if len(transtarlist2) == 0:
 #         if verbose :
-#             print "Your starlist2 is empty, no stars to identify."
+#             print("Your starlist2 is empty, no stars to identify.")
 #         nomatch.extend(starlist1)
 #         return returndict
 #
 #     # Special treatment in the case there is only one star in starlist2
 #     if len(transtarlist2) == 1:
 #         if verbose :
-#             print "Your starlist2 is quite small..."
+#             print("Your starlist2 is quite small...")
 #         for handstar in starlist1:
 #             closest = handstar.distanceandsort(transtarlist2)
 #             if closest[0]['dist'] > tolerance:
 #                 if verbose :
-#                     print "No match for star %s" % handstar.name
+#                     print("No match for star %s" % handstar.name)
 #                 nomatch.append(handstar)
 #                 continue
 #             else:
@@ -631,14 +629,14 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
 #             closest = handstar.distanceandsort(transtarlist2)
 #             if closest[0]['dist'] > tolerance:
 #                 if verbose :
-#                     print "No match for star %s" % handstar.name
+#                     print("No match for star %s" % handstar.name)
 #                 nomatch.append(handstar)
 #                 continue
 #
 #             # Ok, then it must be closer then tolerance. We check for other stars whose distance is less then tolerance different from the first ones distance :
 #             elif onlysingle and (closest[1]['dist'] - closest[0]['dist'] < tolerance):
 #                 if verbose :
-#                     print "Multiple candidates for star %s, skipping" % handstar.name
+#                     print("Multiple candidates for star %s, skipping" % handstar.name)
 #                 notsure.append(handstar)
 #                 continue
 #
@@ -754,26 +752,26 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
 #                         # We got it !
 #
 #                         if verbose :
-#                             print "Number of tries : %i" % n
-#                             print "Distance difference : %.2f pixels" % math.fabs(candidatedistance - stardistance)
-#                             print "Candidate rotation angle : %.2f degrees" % rotcandangle
+#                             print("Number of tries : %i" % n)
+#                             print("Distance difference : %.2f pixels" % math.fabs(candidatedistance - stardistance))
+#                             print("Candidate rotation angle : %.2f degrees" % rotcandangle)
 #
-#                             print "Star pairs used :"
-#                             print brightstar
-#                             print faintstar
-#                             print brightcandidate
-#                             print faintcandidate
+#                             print("Star pairs used :")
+#                             print(brightstar)
+#                             print(faintstar)
+#                             print(brightcandidate)
+#                             print(faintcandidate)
 #
-#                             print "Identified stars : %i / %i" % (nbrids, len(preciserefmanstars) )
+#                             print("Identified stars : %i / %i" % (nbrids, len(preciserefmanstars) ))
 #
 #                         return {"nbrids":nbrids, "angle":rotcandangle, "shift":candshift}
 #
 #
 #     if verbose :
-#         print "I'm a superhero, but I failed"
+#         print("I'm a superhero, but I failed")
 #     if len(indentlist) > 0:
 #         if verbose :
-#             print "Maximum identified stars : %i" % max(indentlist)
+#             print("Maximum identified stars : %i" % max(indentlist))
 #
 #     return {"nbrids":-1, "angle":0.0, "shift":(0.0, 0.0)}
 #
