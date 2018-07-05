@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import absolute_import
 import sys, os
 import math
 import numpy as np
@@ -113,16 +114,6 @@ class Star:
         returnlist = sorted(returnlist, key=operator.itemgetter('dist')) # sort stars according to dist
 
         return returnlist
-
-### And now some functions to manipulate list of such stars ###
-
-
-def printlist(starlist):
-    """
-    Prints the stars ...
-    """
-    for source in starlist:
-        print source
 
 def listtoarray(starlist, full=False):
     """
@@ -393,7 +384,7 @@ class SimpleTransform:
         return (np.array([[self.v[0], -self.v[1]], [self.v[1], self.v[0]]]), self.v[2:4])
 
 
-    def apply(self, (x, y)):
+    def apply(self, x, y):
         """
         Applies the transform to a point (x, y)
         """
@@ -403,7 +394,7 @@ class SimpleTransform:
 
     def applystar(self, star):
         transstar = star.copy()
-        (transstar.x, transstar.y) = self.apply((transstar.x, transstar.y))
+        (transstar.x, transstar.y) = self.apply(transstar.x, transstar.y)
         return transstar
 
     def applystarlist(self, starlist):

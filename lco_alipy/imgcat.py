@@ -15,8 +15,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import star
-import quad
+from __future__ import absolute_import
+from . import star
+from . import quad
 import os
 import numpy as np
 from astropy.io import fits

@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import absolute_import
 import sys, os
 import math
 import numpy as np
@@ -24,9 +25,11 @@ import copy
 import itertools
 import scipy.spatial
 
-import star
+from . import star
 
 import logging
+from six.moves import range
+from six.moves import zip
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +79,8 @@ class Quad:
         #print t.apply((A.x, A.y))
         #print t.apply((B.x, B.y))
 
-        (xC, yC) = t.apply((C.x, C.y))
-        (xD, yD) = t.apply((D.x, D.y))
+        (xC, yC) = t.apply(C.x, C.y)
+        (xD, yD) = t.apply(D.x, D.y)
 
         # Normal case
         self.hash = (xC, yC, xD, yD)
