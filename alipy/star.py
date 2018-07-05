@@ -15,6 +15,8 @@ from astropy.io import ascii
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class Star:
     """
@@ -159,9 +161,9 @@ def readmancat(mancatfilepath, verbose="True"):
     """
 
     if not os.path.isfile(mancatfilepath):
-        logging.error("File does not exist :")
-        logging.error(mancatfilepath)
-        logging.error("Line format to write : starname xpos ypos [flux]")
+        logger.error("File does not exist :")
+        logger.error(mancatfilepath)
+        logger.error("Line format to write : starname xpos ypos [flux]")
         sys.exit(1)
 
 
@@ -179,11 +181,11 @@ def readmancat(mancatfilepath, verbose="True"):
         nbelements = len(elements)
 
         if nbelements != 3 and nbelements != 4:
-            logging.error("Format error on line", i+1, "of :")
-            logging.error(mancatfilepath)
-            logging.error("The line looks like this :")
-            logging.error(line)
-            logging.error("... but we want : starname xpos ypos [flux]")
+            logger.error("Format error on line", i+1, "of :")
+            logger.error(mancatfilepath)
+            logger.error("The line looks like this :")
+            logger.error(line)
+            logger.error("... but we want : starname xpos ypos [flux]")
             sys.exit(1)
 
         name = elements[0]
@@ -195,9 +197,9 @@ def readmancat(mancatfilepath, verbose="True"):
             flux = -1.0
 
         if name in knownnames:
-            logging.error("Error in %s" % (mancatfilepath))
-            logging.error("The name '%s' (line %i) is already taken." % (name, i+1))
-            logging.error("This is insane, bye !")
+            logger.error("Error in %s" % (mancatfilepath))
+            logger.error("The name '%s' (line %i) is already taken." % (name, i+1))
+            logger.error("This is insane, bye !")
             sys.exit(1)
         knownnames.append(name)
 
@@ -205,7 +207,7 @@ def readmancat(mancatfilepath, verbose="True"):
         table.append(Star(x=x, y=y, name=name, flux=flux))
 
 
-    if verbose: print "I've read", len(table), "sources from", os.path.split(mancatfilepath)[1]
+    logger.debug("I've read {} sources from {}".format(len(table), os.path.split(mancatfilepath)[1]))
     return table
 
 
@@ -218,21 +220,19 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
     We read a sextractor catalog with astroasciidata and return a list of stars.
     Minimal fields that must be present in the catalog :
 
-        * NUMBER
-        * EXT_NUMBER
-        * X_IMAGE
-        * Y_IMAGE
-        * FWHM_IMAGE
-        * ELONGATION
-        * FLUX_AUTO
-        * FLAGS
+        * X
+        * Y
+        * FWHM
+        * ELLIPTICITY
+        * FLUX
+        * FLAG
 
     maxflag : maximum value of the FLAGS that you still want to keep. Sources with higher values will be skipped.
-        * FLAGS == 0 : all is fine
-        * FLAGS == 2 : the flux is blended with another one; further info in the sextractor manual.
-        * FLAGS == 4    At least one pixel of the object is saturated (or very close to)
-        * FLAGS == 8    The object is truncated (too close to an image boundary)
-        * FLAGS is the sum of these ...
+        * FLAG == 0 : all is fine
+        * FLAG == 2 : the flux is blended with another one; further info in the sextractor manual.
+        * FLAG == 4    At least one pixel of the object is saturated (or very close to)
+        * FLAG == 8    The object is truncated (too close to an image boundary)
+        * FLAG is the sum of these ...
 
     posflux : if True, only stars with positive FLUX_AUTO are included.
 
@@ -246,62 +246,51 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
     if isinstance(sexcat, str):
 
         if not os.path.isfile(sexcat):
-            logging.error("Sextractor catalog does not exist :")
-            logging.error(sexcat)
+            logger.error("Sextractor catalog does not exist :")
+            logger.error(sexcat)
             sys.exit(1)
 
-        logging.info("Reading %s " % (os.path.split(sexcat)[1]))
+        logger.info("Reading %s " % (os.path.split(sexcat)[1]))
         mycat = ascii.read(sexcat)
 
     else: # then it's already a asciidata object
         mycat = sexcat
 
     # We check for the presence of required fields :
-    minimalfields = ["NUMBER", "X_IMAGE", "Y_IMAGE", "FWHM_IMAGE", "ELONGATION", "FLUX_AUTO", "FLAGS", "EXT_NUMBER"]
+    minimalfields = ["X", "Y", "FWHM", "ELLIPTICITY", "FLUX", "FLAG"]
     minimalfields.extend(propfields)
     for field in minimalfields:
-        if field not in mycat.colnames:
-            logging.error("Field %s not available in your catalog file !" % (field))
+        if field not in mycat.columns.names:
+            logger.error("Field %s not available in your catalog file !" % (field))
             sys.exit(1)
 
-    logging.info("Number of sources in catalog : %i" % (len(mycat)))
-
-    extnumbers = np.unique(mycat['EXT_NUMBER'])
-    logging.info("EXT_NUMBER values found in catalog : %s" % (", ".join(["%i" % val for val in extnumbers])))
-
-    if len(extnumbers) > 1 and hdu == 0:
-        logging.error("Looks like we have several FITS extensions. You have to specify which hdu to use !")
-        sys.exit(1)
+    logger.info("Number of sources in catalog : %i" % (len(mycat)))
 
 
-    propfields.append("FLAGS")
+    propfields.append("FLAG")
     propfields = list(set(propfields))
 
     if len(mycat) == 0:
-        if verbose :
-            print "No stars in the catalog :-("
+        logger.error("No stars in the catalog :-(")
     else :
-        for i, num in enumerate(mycat['NUMBER']) :
-            if mycat['FLAGS'][i] > maxflag :
+        for i, mc in enumerate(mycat) :
+            if mycat['FLAG'][i] > maxflag :
                 continue
-            if hdu != 0 and mycat['EXT_NUMBER'][i] != hdu :
-                continue
-            flux = mycat['FLUX_AUTO'][i]
+            flux = mycat['FLUX'][i]
             if posflux and (flux < 0.0) :
                 continue
-            fwhm = mycat['FWHM_IMAGE'][i]
+            fwhm = mycat['FWHM'][i]
             if float(fwhm) <= minfwhm:
                 continue
 
             props = dict([[propfield, mycat[propfield][i]] for propfield in propfields])
 
-            newstar = Star(x = mycat['X_IMAGE'][i], y = mycat['Y_IMAGE'][i], name = str(num), flux=flux,
-                    props = props, fwhm = mycat['FWHM_IMAGE'][i], elon = mycat['ELONGATION'][i])
+            newstar = Star(x = mycat['X'][i], y = mycat['Y'][i], name = str(i), flux=flux,
+                    props = props, fwhm = mycat['FWHM'][i], elon = mycat['ELLIPTICITY'][i])
 
             returnlist.append(newstar)
 
-    if verbose:
-        print "I've selected %i sources" % (len(returnlist))
+    logger.debug("I've selected %i sources" % (len(returnlist)))
 
     return returnlist
 
@@ -377,7 +366,6 @@ class SimpleTransform:
         ])
 
         inv = scipy.linalg.inv(homo)
-        #print inv
 
         return SimpleTransform((inv[0,0], inv[1,0], inv[0,2], inv[1,2]))
 
@@ -421,8 +409,7 @@ def fitstars(uknstars, refstars, verbose=True):
 
     assert len(uknstars) == len(refstars)
     if len(uknstars) < 2:
-        if verbose:
-            print "Sorry I cannot fit a transform on less than 2 stars."
+        logger.debug("Sorry I cannot fit a transform on less than 2 stars.")
         return None
 
     # ukn * x = ref
@@ -442,59 +429,6 @@ def fitstars(uknstars, refstars, verbose=True):
         trans = scipy.linalg.lstsq(ukn, ref)[0]
 
     return SimpleTransform(np.asarray(trans))
-
-
-#     def teststars(self, uknstars, refstars, r=5.0, verbose=True):
-#         """
-#         We apply the trans to the uknstarlist, and check for correspondance with the refstarlist.
-#         Returns the number of uknstars that could be matched to refstars within r [unit : reference image pixels !].
-#         """
-#
-#         transuknstars = self.applystarlist(uknstars)
-#
-#         transukn = listtoarray(transuknstars)
-#         ref = listtoarray(refstars)
-#         #print "Unknown stars   : ", transukn.shape[0]
-#         #print "Reference stars : ", ref.shape[0]
-#
-#         mindists = np.min(scipy.spatial.distance.cdist(ref, transukn), axis=0)
-#         print " must become smarter !!!!"
-#         nbmatch = np.sum(mindists < r)
-#         if verbose:
-#             print "Tested match on %4i references : OK for %4i/%4i unknown stars (r = %.1f)." % (len(refstars), nbmatch, len(uknstars), r)
-#
-#         return nbmatch
-#
-#
-#     def refinestars(self, uknstars, refstars, r=5.0, verbose=True):
-#         """
-#         I refit myself to all matching stars.
-#         """
-#
-#         transuknstars = self.applystarlist(uknstars)
-#         transukn = listtoarray(transuknstars)
-#         ref = listtoarray(refstars)
-#
-#         # Brute force...
-#         dists = scipy.spatial.distance.cdist(ref, transukn)
-#         uknmindistindexes = np.argmin(dists, axis=0) # For each ukn, the index of the closest ref
-#         uknmindist = np.min(dists, axis=0) # The corresponding distances
-#         uknkeepers = uknmindist < r
-#
-#         matchuknstars = []
-#         matchrefstars = []
-#         for i in range(len(uknkeepers)):
-#             if uknkeepers[i] == True:
-#                 matchuknstars.append(uknstars[i])
-#                 matchrefstars.append(refstars[uknmindistindexes[i]])
-#         if verbose:
-#             print "Refining (before / after) :"
-#             print self
-#         self.fitstars(matchuknstars, matchrefstars)
-#         if verbose:
-#             print self
-#
-
 
 
 def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False):
@@ -521,9 +455,8 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
     minok = mindists <= r # booleans for each ukn
     minokindexes = np.argwhere(minok).flatten() # indexes of uknstars with matches
 
-    if verbose:
-        print "%i/%i stars with distance < r = %.1f (mean %.1f, median %.1f, std %.1f)" % (np.sum(minok), len(uknstars), r,
-            np.mean(mindists[minok]), np.median(mindists[minok]), np.std(mindists[minok]))
+    logger.debug("%i/%i stars with distance < r = %.1f (mean %.1f, median %.1f, std %.1f)" % (np.sum(minok), len(uknstars), r,
+            np.mean(mindists[minok]), np.median(mindists[minok]), np.std(mindists[minok])))
 
     matchuknstars = []
     matchrefstars = []
@@ -538,262 +471,9 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
         else:
             pass # Then there is a companion, we skip it.
 
-    if verbose:
-        print "Filtered for companions, keeping %i/%i matches" % (len(matchuknstars), np.sum(minok))
+    logger.debug("Filtered for companions, keeping %i/%i matches" % (len(matchuknstars), np.sum(minok)))
 
     if getstars==True:
         return (matchuknstars, matchrefstars)
     else:
         return len(matchuknstars)
-
-
-
-
-
-
-
-################################################################################################################################
-
-#
-#
-#
-#
-# def formpairs(starlist1, starlist2, tolerance = 2.0, onlysingle = False, transform = False, scalingratio = 1.0, angle = 0.0, shift = (0.0, 0.0), verbose = True):
-#     """
-#     starlist1 and starlist2 are two lists of stars.
-#     For each star in starlist1, we find the closest star of starlist2, if found within a given tolerance.
-#     starlist1 = hand picked stars
-#     starlist2 = large catalog of
-#     We return a list of pairs of the corresponding stars (in form of a dict). See first lines to get that.
-#
-#     transform == True :
-#         starlist2 is tranformed, using scalingration, angle, and shift, prior to the pair creation.
-#         Nevertheless, the idlist 2 will be filled with the raw untransformed stars from starlist2 !!!
-#
-#
-#     tolerance = maximum distance between identified stars. Set it high -> simply select the closest one.
-#     onlysingle == False : closest star within tolerance
-#     onlysingle == True : same, but only if no other star is within tolerance
-#
-#     """
-#     idlist1 = [] # Stars of starlist1 identified in starlist2
-#     idlist2 = [] # The corresponding starlist2 stars (same number, same order)
-#     iddists = [] # The list of distances between the stars of idlist1 and idlist2 (same number and order)
-#     nomatch = [] # Stars of starlist1 that could not be identified in starlist2
-#     notsure = [] # Stars of starlist1 that could not doubtlessly be identified in starlist2
-#
-#
-#     # If required, we transform the starlist 2 :
-#     if transform :
-#         transtarlist2 = copy.deepcopy(starlist2)
-#         zoomstarlist(transtarlist2, scalingratio)
-#         rotatestarlist(transtarlist2, angle, (0, 0))
-#         shiftstarlist(transtarlist2, shift)
-#         # Remember : we will pick the stars to fill idlist2 from the raw starlist2 !
-#
-#     else:
-#         transtarlist2 = starlist2
-#
-#     returndict = {"idlist1":idlist1, "idlist2":idlist2, "iddists":iddists, "nomatch":nomatch, "notsure":notsure}
-#
-#     if len(starlist1) == 0:
-#         if verbose :
-#             print "Your starlist1 is empty, nothing to do."
-#         return returndict
-#
-#     if len(transtarlist2) == 0:
-#         if verbose :
-#             print "Your starlist2 is empty, no stars to identify."
-#         nomatch.extend(starlist1)
-#         return returndict
-#
-#     # Special treatment in the case there is only one star in starlist2
-#     if len(transtarlist2) == 1:
-#         if verbose :
-#             print "Your starlist2 is quite small..."
-#         for handstar in starlist1:
-#             closest = handstar.distanceandsort(transtarlist2)
-#             if closest[0]['dist'] > tolerance:
-#                 if verbose :
-#                     print "No match for star %s" % handstar.name
-#                 nomatch.append(handstar)
-#                 continue
-#             else:
-#                 idlist1.append(handstar)
-#                 idlist2.append(starlist2[closest[0]['origpos']])
-#                 iddists.append(closest[0]['dist'])
-#
-#         return returndict
-#
-#     # The usual case :
-#     else:
-#         for handstar in starlist1:
-#             closest = handstar.distanceandsort(transtarlist2)
-#             if closest[0]['dist'] > tolerance:
-#                 if verbose :
-#                     print "No match for star %s" % handstar.name
-#                 nomatch.append(handstar)
-#                 continue
-#
-#             # Ok, then it must be closer then tolerance. We check for other stars whose distance is less then tolerance different from the first ones distance :
-#             elif onlysingle and (closest[1]['dist'] - closest[0]['dist'] < tolerance):
-#                 if verbose :
-#                     print "Multiple candidates for star %s, skipping" % handstar.name
-#                 notsure.append(handstar)
-#                 continue
-#
-#             # Finally, this means we have found our star
-#             else:
-#                 idlist1.append(handstar)
-#                 idlist2.append(starlist2[closest[0]['origpos']])
-#                 iddists.append(closest[0]['dist'])
-#
-#         return returndict
-#
-#
-#
-# def listidentify(starlist1, starlist2, tolerance = 2.0, onlysingle = False, transform = False, scalingratio = 1.0, angle = 0.0, shift = (0.0, 0.0), verbose = True):
-#     """
-#     Same as formpairs (we call it), but we return only the idlist2 (not transformed, even if you give a transform), but with names taken from idlist1.
-#     Typical : starlist2 is a sextractor catalog with random names, starlist 1 is a handpicked catalog with special names,
-#     and you want to get stars with sextractor properties but your own names.
-#     """
-#
-#     formpairsdict = formpairs(starlist1, starlist2, tolerance = tolerance, onlysingle = onlysingle, transform = transform, scalingratio = scalingratio, angle = angle, shift = shift, verbose = verbose)
-#
-#     match = []
-#
-#     for (s1, s2, d) in zip(formpairsdict["idlist1"], formpairsdict["idlist2"], formpairsdict["iddists"]):
-#         s2.name = s1.name
-#         s2.props["iddist"] = d
-#         match.append(s2)
-#
-#     nomatchnames = [s.name for s in formpairsdict["nomatch"]]
-#     notsurenames = [s.name for s in formpairsdict["notsure"]]
-#
-#     return {"match":match, "nomatchnames":nomatchnames, "notsurenames":notsurenames}
-#
-#
-#
-#
-# def findtrans(preciserefmanstars, autostars, scalingratio = 1.0, tolerance = 2.0, minnbrstars = 5, mindist = 100.0, nref = 10, nauto = 30, verbose=True):
-#
-#     """
-#     Finds a rotation and shift between two catalogs (a big dirty one and a small handpicked one).
-#     Both catalogs should be SORTED IN FLUX, and the second one should be smaller for max performance.
-#
-#     Only the first nref stars of preciserefmanstars are considered for searching the possible matches, and furthermore only
-#     pairs farther then mindist are considered.
-#
-#     tolerance is used when looking if a match was found.
-#
-#     minnbrstars = as soon as this number of stars are identified, the algo stops, we look no further.
-#
-#     The scalingratio parameter is a float to multiply with a distance of the autostars to match the same distance between the preciserefmanstars.
-#
-#     We return a dict of 3 things :
-#     - nbr of identified stars (-1 if failed)
-#     - rotation angle (center = 0,0)
-#     - shift
-#
-#     This should then be used to transform your autostars, and then run listidentify between the catalogs if you want ...
-#     This is done with the function formpairs
-#
-#     """
-#
-#     # Think of a Hubble expansion with "origin" (0,0)
-#     # We apply this to the image to align, so that it matches the distances in the reference image.
-#     autostarscopy = copy.deepcopy(autostars)
-#     zoomstarlist(autostarscopy, scalingratio)
-#
-#     n = 0 # a counter for the number of tries
-#     indentlist = [] # only used in case of failure
-#
-#     for b, brightstar in enumerate(preciserefmanstars[:nref]):
-#         for f, faintstar in enumerate(preciserefmanstars[:nref]):
-#             if f == b: continue
-#             stardistance = brightstar.distance(faintstar)
-#             if stardistance < mindist : continue
-#
-#             # We have a pair of stars from the preciserefmancat.
-#             # Let's see if we find to stars in the autocat with a similar distance.
-#
-#             for bc, brightcandidate in enumerate(autostarscopy[:nauto]):
-#                 for fc, faintcandidate in enumerate(autostarscopy[:nauto]):
-#                     if fc == bc: continue
-#                     candidatedistance =  brightcandidate.distance(faintcandidate)
-#                     if math.fabs(candidatedistance - stardistance)/stardistance > 0.05 :
-#                         # So if there is a disagreement larger then 5 percent...
-#                         continue
-#
-#                     # We now have a promising pair of pairs, let's check them out.
-#
-#                     n = n+1
-#
-#                     starangle = brightstar.trigangle(faintstar)
-#                     candidateangle = brightcandidate.trigangle(faintcandidate)
-#                     rotcandangle = (starangle - candidateangle) % 360.0    # value to "add" to cand to match the star
-#
-#                     # We apply this rotation to the bright candidate, to determine the shift :
-#                     testcand = copy.deepcopy(brightcandidate)
-#                     testcand.rotate(rotcandangle, (0, 0))
-#                     candshift = testcand.findshift(brightstar)
-#
-#                     # We apply the rotation and this shift to the full zoomed autostarlist :
-#                     testcandlist = copy.deepcopy(autostarscopy)
-#                     rotatestarlist(testcandlist, rotcandangle, (0, 0))
-#                     shiftstarlist(testcandlist, candshift)
-#
-#                     # We evaluate the match between the transformed autostars and the ref stars :
-#
-#                     pairsdict = formpairs(preciserefmanstars, testcandlist, tolerance = tolerance, onlysingle = True, verbose = False)
-#                     nbrids = len(pairsdict["idlist1"])
-#                     indentlist.append(nbrids)
-#
-#                     if nbrids >= minnbrstars:
-#                         # We got it !
-#
-#                         if verbose :
-#                             print "Number of tries : %i" % n
-#                             print "Distance difference : %.2f pixels" % math.fabs(candidatedistance - stardistance)
-#                             print "Candidate rotation angle : %.2f degrees" % rotcandangle
-#
-#                             print "Star pairs used :"
-#                             print brightstar
-#                             print faintstar
-#                             print brightcandidate
-#                             print faintcandidate
-#
-#                             print "Identified stars : %i / %i" % (nbrids, len(preciserefmanstars) )
-#
-#                         return {"nbrids":nbrids, "angle":rotcandangle, "shift":candshift}
-#
-#
-#     if verbose :
-#         print "I'm a superhero, but I failed"
-#     if len(indentlist) > 0:
-#         if verbose :
-#             print "Maximum identified stars : %i" % max(indentlist)
-#
-#     return {"nbrids":-1, "angle":0.0, "shift":(0.0, 0.0)}
-#
-#
-#
-# def writeforgeomap(filename, pairs):
-#     """
-#     Writes an input catalog of corresponding star pairs, for geomap
-#     Pair is a list of couples like (refstar, startoalign)
-#     """
-#
-#
-#     import csv
-#
-#     table = []
-#     for pair in pairs:
-#         table.append([pair[0].x, pair[0].y, pair[1].x, pair[1].y])
-#
-#     geomap = open(filename, "wb") # b needed for csv
-#     writer = csv.writer(geomap, delimiter="\t")
-#     writer.writerows(table)
-#     geomap.close()
-#
