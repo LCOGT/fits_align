@@ -1,15 +1,29 @@
 #!/usr/bin/env python
-
-from distutils.core import setup
+from setuptools import setup
 
 setup(
-	name='alipy',
-	version='2.0dev',
-	packages=['alipy'],
-	description='alipy',
-	long_description=open('README.md').read(),
-	author='Malte Tewes',
-	license='GPLv3',
-	author_email='malte.tewes[at]epfl.ch',
-	url='http://obswww.unige.ch/~tewes/alipy/'
+    name='lco_alipy',
+    version='0.3',
+    packages=['lco_alipy'],
+    long_description=open('README.md').read(),
+    author='Edward Gomez',
+    install_requires=[
+        'astropy',
+        'numpy',
+        'scipy'
+    ],
+
+    classifiers=[
+
+    'Development Status :: 3 - Beta',
+
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Build Tools',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.2',
+    'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.6',
+],
 )
