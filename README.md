@@ -10,16 +10,32 @@ Download this repository :
 `python setup.py install`
 
 
-## To generate the documentation
+## Example usage
 
-```bash
-cd doc
-make apidoc
-make html
+```python
+from lco_alipy.ident import run
+from lco_alipy.align import affineremap
+from glob import glob
+from numpy import shape
+
+tmp_dir = "<FULL PATH TO INPUT FILES>"
+
+img_list = sorted(glob(os.path.join(tmp_dir,"*.fz")))
+ref_image = img_list[0]
+images_to_align = img_list[1:]
+hdu = fits.open(ref_image)
+data = hdu[1].data
+outputshape = shape(data)
+
+identifications = run(ref_image, images_to_align)
+
+for id in identifications:
+    if id.ok:
+        affineremap(id.ukn.filepath, id.trans, shape=(outputshape[1],outputshape[0]), outdir=tmpdir)
+
+aligned_images = sorted(glob(tmpdir+"/*_affineremap.fits"))
 ```
-Documentation is then available in:
-`--> _build/index.html`
 
 ## About
 
-This is a customised fork of [AliPy by Malte Tewes](http://obswww.unige.ch/~tewes/alipy/). 
+This is a customised fork of [AliPy by Malte Tewes](http://obswww.unige.ch/~tewes/alipy/).
