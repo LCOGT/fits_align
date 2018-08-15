@@ -251,36 +251,26 @@ def run(ref, ukns, hdu=0, visu=True, skipsaturated=False, r = 5.0, n=500, sexkee
 
     """
 
-    logger.debug( 10*"#", " Preparing reference ...")
+    logger.debug( "Preparing reference ...")
     ref = imgcat.ImgCat(ref, hdu=hdu)
     ref.makecat(rerun=sexrerun, keepcat=sexkeepcat, verbose=verbose)
     ref.makestarlist(skipsaturated=skipsaturated, n=n, verbose=verbose)
-    if visu:
-        ref.showstars(verbose=verbose)
     ref.makemorequads(verbose=verbose)
 
     identifications = []
 
     for ukn in ukns:
 
-        logger.debug(10*"#", "Processing %s" % (ukn))
+        logger.debug("Processing {}",format(ukn))
 
         ukn = imgcat.ImgCat(ukn, hdu=hdu)
         ukn.makecat(rerun=sexrerun, keepcat=sexkeepcat, verbose=verbose)
         ukn.makestarlist(skipsaturated=skipsaturated, n=n, verbose=verbose)
-        if visu:
-            ukn.showstars(verbose=verbose)
 
         idn = Identification(ref, ukn)
         idn.findtrans(verbose=verbose, r=r)
         idn.calcfluxratio(verbose=verbose)
         identifications.append(idn)
 
-        if visu:
-            ukn.showquads(verbose=verbose)
-            idn.showmatch(verbose=verbose)
-
-    if visu:
-        ref.showquads(verbose=verbose)
 
     return identifications

@@ -2,9 +2,9 @@
 from setuptools import setup
 
 setup(
-    name='lco_alipy',
+    name='fits_align',
     version='0.3',
-    packages=['lco_alipy'],
+    packages=['fits_align'],
     long_description=open('README.md').read(),
     author='Edward Gomez',
     install_requires=[

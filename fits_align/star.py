@@ -23,9 +23,10 @@ import numpy as np
 import operator
 import copy
 import itertools
-import scipy.linalg
 import scipy.spatial
 from astropy.io import ascii
+
+from . import utils
 
 import logging
 
@@ -369,7 +370,7 @@ class SimpleTransform:
         [0.0, 0.0, 1.0]
         ])
 
-        inv = scipy.linalg.inv(homo)
+        inv = np.linalg.inv(homo)
 
         return SimpleTransform((inv[0,0], inv[1,0], inv[0,2], inv[1,2]))
 
@@ -428,9 +429,9 @@ def fitstars(uknstars, refstars, verbose=True):
     ukn = np.vstack(np.array(uknlist)) # a matrix
 
     if len(uknstars) == 2:
-        trans = scipy.linalg.solve(ukn, ref)
+        trans = np.linalg.solve(ukn, ref)
     else:
-        trans = scipy.linalg.lstsq(ukn, ref)[0]
+        trans = np.linalg.lstsq(ukn, ref)[0]
 
     return SimpleTransform(np.asarray(trans))
 
@@ -454,6 +455,7 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
         ukn = listtoarray(uknstars)
     ref = listtoarray(refstars)
 
+    np_dists = utils.cdist(ref,ukn) #
     dists = scipy.spatial.distance.cdist(ukn, ref) # Big table of distances between ukn and ref
     mindists = np.min(dists, axis=1) # For each ukn, the minimal distance
     minok = mindists <= r # booleans for each ukn
