@@ -111,7 +111,7 @@ class Identification:
                 # If no quads are available, we directly try to make more ones.
                 for cand in cands:
                     # Check how many stars are identified...
-                    nident = star.identify(self.ukn.starlist, self.ref.starlist, trans=cand["trans"], r=r, verbose=verbose, getstars=False)
+                    nident = star.identify(self.ukn.starlist, self.ref.starlist, trans=cand["trans"], r=r, getstars=False)
                     if nident >= minnident:
                         self.trans = cand["trans"]
                         self.cand = cand
@@ -129,7 +129,7 @@ class Identification:
 
         if self.ok: # we refine the transform
             # get matching stars :
-            (self.uknmatchstars, self.refmatchstars) = star.identify(self.ukn.starlist, self.ref.starlist, trans=self.trans, r=r, verbose=False, getstars=True)
+            (self.uknmatchstars, self.refmatchstars) = star.identify(self.ukn.starlist, self.ref.starlist, trans=self.trans, r=r, getstars=True)
             # refit the transform on them :
             logger.debug("Refitting transform (before/after) :")
             logger.debug(self.trans)
@@ -138,7 +138,7 @@ class Identification:
                 self.trans = newtrans
                 logger.debug(self.trans)
             # Generating final matched star lists :
-            (self.uknmatchstars, self.refmatchstars) = star.identify(self.ukn.starlist, self.ref.starlist, trans=self.trans, r=r, verbose=verbose, getstars=True)
+            (self.uknmatchstars, self.refmatchstars) = star.identify(self.ukn.starlist, self.ref.starlist, trans=self.trans, r=r, getstars=True)
 
             logger.debug("I'm done !")
 
@@ -216,9 +216,9 @@ class Identification:
 
 
 
-def run(ref, ukns, hdu=0, visu=True, skipsaturated=False, r = 5.0, n=500, sexkeepcat=False, sexrerun=True, verbose=True):
+def make_transforms(ref, ukns, hdu=0, skipsaturated=False, r = 5.0, n=500):
     """
-    Top-level function to identify transorms between images.
+    Top-level function to identify transforms between images.
     Returns a list of Identification objects that contain all the info to go further.
 
     :param ref: path to a FITS image file that will act as the "reference".
@@ -229,9 +229,6 @@ def run(ref, ukns, hdu=0, visu=True, skipsaturated=False, r = 5.0, n=500, sexkee
 
     :param hdu: The hdu of the fits files (same for all) that you want me to use. 0 is somehow "automatic". If multihdu, 1 is usually science.
 
-    :param visu: If yes, I'll draw some visualizations of the process (good to understand problems, if the identification fails).
-    :type visu: boolean
-
     :param skipsaturated: Should I skip saturated stars ?
     :type skipsaturated: boolean
 
@@ -240,36 +237,27 @@ def run(ref, ukns, hdu=0, visu=True, skipsaturated=False, r = 5.0, n=500, sexkee
     :param n: Number of brightest stars of each image to consider (default 500 should be fine).
     :type n: int
 
-    :param sexkeepcat: Put this to True if you want me to keep the SExtractor catalogs (in a dir "alipy_cats").
-    :type sexkeepcat: boolean
-    :param sexrerun: Put this to False if you want me to check if I have some previously kept catalogs (with sexkeepcat=True),
-        instead of running SExtractor again on the images.
-    :type sexrerun: boolean
-
-    .. todo:: Make this guy accept existing asciidata catalogs, instead of only FITS images.
-
-
     """
 
     logger.debug( "Preparing reference ...")
     ref = imgcat.ImgCat(ref, hdu=hdu)
-    ref.makecat(rerun=sexrerun, keepcat=sexkeepcat, verbose=verbose)
-    ref.makestarlist(skipsaturated=skipsaturated, n=n, verbose=verbose)
-    ref.makemorequads(verbose=verbose)
+    ref.makecat()
+    ref.makestarlist(skipsaturated=skipsaturated, n=n)
+    ref.makemorequads()
 
     identifications = []
 
     for ukn in ukns:
 
-        logger.debug("Processing {}",format(ukn))
+        logger.debug("Processing {}".format(ukn))
 
         ukn = imgcat.ImgCat(ukn, hdu=hdu)
-        ukn.makecat(rerun=sexrerun, keepcat=sexkeepcat, verbose=verbose)
-        ukn.makestarlist(skipsaturated=skipsaturated, n=n, verbose=verbose)
+        ukn.makecat()
+        ukn.makestarlist(skipsaturated=skipsaturated, n=n)
 
         idn = Identification(ref, ukn)
-        idn.findtrans(verbose=verbose, r=r)
-        idn.calcfluxratio(verbose=verbose)
+        idn.findtrans(r=r)
+        idn.calcfluxratio()
         identifications.append(idn)
 
 

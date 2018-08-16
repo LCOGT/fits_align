@@ -23,10 +23,9 @@ import numpy as np
 import operator
 import copy
 import itertools
-import scipy.spatial
 from astropy.io import ascii
 
-from . import utils
+from fits_align.utils import cdist_np
 
 import logging
 
@@ -436,7 +435,7 @@ def fitstars(uknstars, refstars, verbose=True):
     return SimpleTransform(np.asarray(trans))
 
 
-def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False):
+def identify(uknstars, refstars, trans=None, r=5.0, getstars=False):
     """
     Allows to:
      * get the number or matches, i.e. evaluate the quality of the trans
@@ -448,15 +447,13 @@ def identify(uknstars, refstars, trans=None, r=5.0, verbose=True, getstars=False
     Inspired by the "formpairs" of alipy 1.0 ...
 
     """
-
     if trans != None:
         ukn = listtoarray(trans.applystarlist(uknstars))
     else:
         ukn = listtoarray(uknstars)
     ref = listtoarray(refstars)
 
-    np_dists = utils.cdist(ref,ukn) #
-    dists = scipy.spatial.distance.cdist(ukn, ref) # Big table of distances between ukn and ref
+    dists = cdist_np(ukn,ref) # Big table of distances between ukn and ref
     mindists = np.min(dists, axis=1) # For each ukn, the minimal distance
     minok = mindists <= r # booleans for each ukn
     minokindexes = np.argwhere(minok).flatten() # indexes of uknstars with matches

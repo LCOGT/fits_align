@@ -13,8 +13,8 @@ Download this repository :
 ## Example usage
 
 ```python
-from lco_alipy.ident import run
-from lco_alipy.align import affineremap
+from fits_align.ident import make_transforms
+from fits_align.align import affineremap
 from glob import glob
 from numpy import shape
 
@@ -27,7 +27,7 @@ hdu = fits.open(ref_image)
 data = hdu[1].data
 outputshape = shape(data)
 
-identifications = run(ref_image, images_to_align)
+identifications = make_transforms(ref_image, images_to_align)
 
 for id in identifications:
     if id.ok:
@@ -38,4 +38,4 @@ aligned_images = sorted(glob(tmpdir+"/*_affineremap.fits"))
 
 ## About
 
-This is a customised fork of [AliPy by Malte Tewes](http://obswww.unige.ch/~tewes/alipy/).
+This is a customised fork of [AliPy by Malte Tewes](http://obswww.unige.ch/~tewes/alipy/). I have removed the dependency on SciPy in favour of pure NumPy (for linear algebra) and Pillow (for image array transforms).

@@ -23,10 +23,9 @@ import numpy as np
 import operator # For sorting
 import copy
 import itertools
-import scipy.spatial
 
 from . import star
-from . import utils
+from fits_align.utils import cdist_np
 
 import logging
 from six.moves import range
@@ -231,7 +230,7 @@ def proposecands(uknquadlist, refquadlist, n=5, verbose=True):
     refhashs = np.array([q.hash for q in refquadlist])
 
     # Brute force...
-    dists = utils.cdist(refhashs, uknhashs) #scipy.spatial.distance.cdist(refhashs, uknhashs)
+    dists = cdist_np(refhashs, uknhashs) #scipy.spatial.distance.cdist(refhashs, uknhashs)
     uknmindistindexes = np.argmin(dists, axis=0) # For each ukn, the index of the closest ref
     uknmindist = np.min(dists, axis=0) # The corresponding distances
     uknbestindexes = np.argsort(uknmindist)

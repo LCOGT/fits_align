@@ -20,9 +20,8 @@ from . import star
 import os
 import numpy as np
 import math
-import scipy.ndimage
+from PIL import Image
 from astropy.io import fits
-import csv
 
 import logging
 
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def affineremap(filepath, transform, shape, alifilepath=None, outdir = "alipy_out", hdu=0, verbose=True):
+def affineremap(filepath, transform, shape, outdir = "alipy_out", hdu=0, verbose=True):
     """
     Apply the simple affine transform to the image and saves the result as FITS, without using pyraf.
 
@@ -43,8 +42,6 @@ def affineremap(filepath, transform, shape, alifilepath=None, outdir = "alipy_ou
     :param shape: Output shape (width, height)
     :type shape: tuple
 
-    :param alifilepath: where to save the aligned image. If None, I will put it in the outdir directory.
-    :type alifilepath: string
 
     :param hdu: The hdu of the fits file that you want me to use. 0 is primary. If multihdu, 1 is usually science.
 
@@ -55,14 +52,15 @@ def affineremap(filepath, transform, shape, alifilepath=None, outdir = "alipy_ou
     #print matrix, offset
 
     data, hdr = fromfits(filepath, hdu = hdu, verbose = verbose)
-    data = scipy.ndimage.interpolation.affine_transform(data, matrix, offset=offset, output_shape = shape)
+    affine = (matrix[0][0], matrix[1][0],offset[1],matrix[0][1],matrix[1][1],offset[0])
+    image = Image.fromarray(data)
+    new_im = image.transform(image.size, Image.AFFINE, affine, resample=Image.BILINEAR)
+    data = np.asarray(new_im)
 
     basename = os.path.splitext(os.path.basename(filepath))[0]
 
-    if alifilepath == None:
-        alifilepath = os.path.join(outdir, basename + "_affineremap.fits")
-    else:
-        outdir = os.path.split(alifilepath)[0]
+    alifilepath = os.path.join(outdir, basename + "_affineremap.fits")
+
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
 

@@ -1,5 +1,17 @@
 import numpy as np
 
+def find_coeffs(pa, pb):
+    matrix = []
+    for p1, p2 in zip(pa, pb):
+        matrix.append([p1[0], p1[1], 1, 0, 0, 0, -p2[0]*p1[0], -p2[0]*p1[1]])
+        matrix.append([0, 0, 0, p1[0], p1[1], 1, -p2[1]*p1[0], -p2[1]*p1[1]])
+
+    A = numpy.matrix(matrix, dtype=numpy.float)
+    B = numpy.array(pb).reshape(8)
+
+    res = numpy.dot(numpy.linalg.inv(A.T * A) * A.T, B)
+    return numpy.array(res).reshape(8)
+
 def affine_transform(input, matrix, offset=0.0, output_shape=None,
                      output=None, order=3,
                      mode='constant', cval=0.0, prefilter=True):
@@ -74,28 +86,27 @@ def affine_transform(input, matrix, offset=0.0, output_shape=None,
     """
     if order < 0 or order > 5:
         raise RuntimeError('spline order not supported')
-    input = numpy.asarray(input)
-    if numpy.iscomplexobj(input):
+    input = np.asarray(input)
+    if np.iscomplexobj(input):
         raise TypeError('Complex type not supported')
     if output_shape is None:
         output_shape = input.shape
     if input.ndim < 1 or len(output_shape) < 1:
         raise RuntimeError('input and output rank must be > 0')
-    mode = _ni_support._extend_mode_to_code(mode)
+    mode = _extend_mode_to_code(mode)
     if prefilter and order > 1:
-        filtered = spline_filter(input, order, output=numpy.float64)
+        filtered = spline_filter(input, order, output=np.float64)
     else:
         filtered = input
-    output = _ni_support._get_output(output, input,
-                                                   shape=output_shape)
-    matrix = numpy.asarray(matrix, dtype=numpy.float64)
+    output = _get_output(output, input, shape=output_shape)
+    matrix = np.asarray(matrix, dtype=np.float64)
     if matrix.ndim not in [1, 2] or matrix.shape[0] < 1:
         raise RuntimeError('no proper affine matrix provided')
     if (matrix.ndim == 2 and matrix.shape[1] == input.ndim + 1 and
             (matrix.shape[0] in [input.ndim, input.ndim + 1])):
         if matrix.shape[0] == input.ndim + 1:
             exptd = [0] * input.ndim + [1]
-            if not numpy.all(matrix[input.ndim] == exptd):
+            if not np.all(matrix[input.ndim] == exptd):
                 msg = ('Expected homogeneous transformation matrix with '
                        'shape %s for image shape %s, but bottom row was '
                        'not equal to %s' % (matrix.shape, input.shape, exptd))
@@ -109,12 +120,13 @@ def affine_transform(input, matrix, offset=0.0, output_shape=None,
         raise RuntimeError('affine matrix has wrong number of columns')
     if not matrix.flags.contiguous:
         matrix = matrix.copy()
-    offset = _ni_support._normalize_sequence(offset, input.ndim)
-    offset = numpy.asarray(offset, dtype=numpy.float64)
+    # offset = _ni_support._normalize_sequence(offset, input.ndim)
+    offset = np.asarray(offset, dtype=np.float64)
     if offset.ndim != 1 or offset.shape[0] < 1:
         raise RuntimeError('no proper offset provided')
     if not offset.flags.contiguous:
         offset = offset.copy()
+    print(filtered, None, None, matrix, offset, output, order, mode, cval, None, None)
     if matrix.ndim == 1:
         warnings.warn(
             "The behaviour of affine_transform with a one-dimensional "
@@ -126,9 +138,40 @@ def affine_transform(input, matrix, offset=0.0, output_shape=None,
     else:
         _nd_image.geometric_transform(filtered, None, None, matrix, offset,
                                       output, order, mode, cval, None, None)
+
     return output
 
-def cdist(XA, XB):
+def _get_output(output, input, shape=None):
+    if shape is None:
+        shape = input.shape
+    if output is None:
+        output = numpy.zeros(shape, dtype=input.dtype.name)
+    elif type(output) in [type(type), type(numpy.zeros((4,)).dtype)]:
+        output = numpy.zeros(shape, dtype=output)
+    elif type(output) in string_types:
+        output = numpy.typeDict[output]
+        output = numpy.zeros(shape, dtype=output)
+    elif output.shape != shape:
+        raise RuntimeError("output shape not correct")
+    return output
+
+def _extend_mode_to_code(mode):
+    """Convert an extension mode to the corresponding integer code.
+    """
+    if mode == 'nearest':
+        return 0
+    elif mode == 'wrap':
+        return 1
+    elif mode == 'reflect':
+        return 2
+    elif mode == 'mirror':
+        return 3
+    elif mode == 'constant':
+        return 4
+    else:
+        raise RuntimeError('boundary mode not supported')
+
+def cdist_np(XA, XB):
 
 
     XA = np.asarray(XA, order='c')
@@ -150,13 +193,15 @@ def cdist(XA, XB):
     n = s[1]
     dm = np.empty((mA, mB), dtype=np.double)
 
-    cdist_euclid(XA, XB)
+    dm = cdist_euclid(XA, XB)
     return dm
 
 
 def cdist_euclid(XA, XB):
     distances = []
+    print('cdist_euclid')
     for xa in XA:
         dists = np.linalg.norm(xa - XB, axis=1)
         distances.append(dists)
-    return np.array(distances)
+    dist = np.array(distances)
+    return dist

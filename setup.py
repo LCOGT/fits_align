@@ -3,14 +3,14 @@ from setuptools import setup
 
 setup(
     name='fits_align',
-    version='0.3',
+    version='0.4',
     packages=['fits_align'],
     long_description=open('README.md').read(),
     author='Edward Gomez',
     install_requires=[
         'astropy',
         'numpy',
-        'scipy'
+        'pillow'
     ],
 
     classifiers=[
