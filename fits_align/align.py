@@ -1,5 +1,5 @@
 """
-    LCO AliPy - Align and reproject FITS files from Las Cumbres Observatory
+    FITS Align - Align and reproject FITS files from Las Cumbres Observatory
     Copyright (C) 2018 Edward Gomez
 
     This program is free software: you can redistribute it and/or modify
@@ -66,9 +66,10 @@ def affineremap(filepath, transform, shape, outdir = "alipy_out", hdu=0, verbose
 
 
     tofits(alifilepath, data, hdr = hdr, verbose = verbose)
+    return alifilepath
 
 
-def shape(filepath, hdu = 0, verbose=True):
+def shape(filepath, hdu = 0):
     """
     Returns the 2D shape (width, height) of a FITS image.
 
@@ -80,7 +81,7 @@ def shape(filepath, hdu = 0, verbose=True):
     if hdr["NAXIS"] != 2:
         raise RuntimeError("Hmm, this hdu is not a 2D image !")
     logger.debug("Image shape of %s : (%i, %i)" % (os.path.basename(filepath), int(hdr["NAXIS1"]), int(hdr["NAXIS2"])))
-    return (int(hdr["NAXIS1"]), int(hdr["NAXIS2"]))
+    return (int(hdr["ZNAXIS1"]), int(hdr["ZNAXIS2"]))
 
 
 def fromfits(infilename, hdu = 0, verbose = True):
@@ -124,3 +125,4 @@ def tofits(outfilename, pixelarray, hdr = None, verbose = True):
     hdu.writeto(outfilename)
 
     logger.debug("Wrote %s" % outfilename)
+    return True

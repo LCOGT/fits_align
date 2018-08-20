@@ -1,5 +1,5 @@
 """
-    LCO AliPy - Align and reproject FITS files from Las Cumbres Observatory
+    FITS Align - Align and reproject FITS files from Las Cumbres Observatory
     Copyright (C) 2018 Edward Gomez
 
     This program is free software: you can redistribute it and/or modify
