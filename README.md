@@ -1,4 +1,4 @@
-# FTIS Align
+# FITS Align
 
 This is a python package to quickly, automatically, and robustly identify geometrical transforms between optical astronomical images, using only field stars. The images can have different pixel sizes, orientations, pointings and filters.
 
@@ -23,15 +23,12 @@ tmp_dir = "<FULL PATH TO INPUT FILES>"
 img_list = sorted(glob(os.path.join(tmp_dir,"*.fz")))
 ref_image = img_list[0]
 images_to_align = img_list[1:]
-hdu = fits.open(ref_image)
-data = hdu[1].data
-outputshape = shape(data)
 
 identifications = make_transforms(ref_image, images_to_align)
 
 for id in identifications:
     if id.ok:
-        affineremap(id.ukn.filepath, id.trans, shape=(outputshape[1],outputshape[0]), outdir=tmpdir)
+        affineremap(id.ukn.filepath, id.trans, outdir=tmpdir)
 
 aligned_images = sorted(glob(tmpdir+"/*_affineremap.fits"))
 ```
