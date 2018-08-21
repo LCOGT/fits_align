@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def affineremap(filepath, transform, shape, outdir = "alipy_out", hdu=0, verbose=True):
+def affineremap(filepath, transform, outdir = "alipy_out", hdu=0, verbose=True):
     """
     Apply the simple affine transform to the image and saves the result as FITS, without using pyraf.
 
@@ -38,9 +38,6 @@ def affineremap(filepath, transform, shape, outdir = "alipy_out", hdu=0, verbose
 
     :param transform: as returned e.g. by alipy.ident()
     :type transform: SimpleTransform object
-
-    :param shape: Output shape (width, height)
-    :type shape: tuple
 
 
     :param hdu: The hdu of the fits file that you want me to use. 0 is primary. If multihdu, 1 is usually science.
@@ -51,7 +48,7 @@ def affineremap(filepath, transform, shape, outdir = "alipy_out", hdu=0, verbose
     (matrix, offset) = inv.matrixform()
     #print matrix, offset
 
-    data, hdr = fromfits(filepath, hdu = hdu, verbose = verbose)
+    data, hdr = fromfits(filepath, hdu = hdu)
     affine = (matrix[0][0], matrix[1][0],offset[1],matrix[0][1],matrix[1][1],offset[0])
     image = Image.fromarray(data)
     new_im = image.transform(image.size, Image.AFFINE, affine, resample=Image.BILINEAR)
@@ -65,7 +62,7 @@ def affineremap(filepath, transform, shape, outdir = "alipy_out", hdu=0, verbose
         os.makedirs(outdir)
 
 
-    tofits(alifilepath, data, hdr = hdr, verbose = verbose)
+    tofits(alifilepath, data, hdr = hdr)
     return alifilepath
 
 
