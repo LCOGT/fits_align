@@ -1,6 +1,6 @@
 # FITS Align
 
-This is a python package to quickly, automatically, and robustly identify geometrical transforms between optical astronomical images, using only field stars. The images can have different pixel sizes, orientations, pointings and filters.
+Align a sequence of astronomical FITS files based on sources extracted in each image. The aligned files will be geometrically reprojected so all the images are the same size and shape.
 
 It is designed to work exclusively with reduced data from [Las Cumbres Observatory](https://lco.global). FITS data from LCO is [Rice compressed](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) and contains sources extracted using [SEP](https://sep.readthedocs.io/en/v1.0.x/) during our data pipeline processing.
 
@@ -26,11 +26,12 @@ images_to_align = img_list[1:]
 
 identifications = make_transforms(ref_image, images_to_align)
 
+aligned_images = [ref_image]
 for id in identifications:
     if id.ok:
-        affineremap(id.ukn.filepath, id.trans, outdir=tmpdir)
+        alignedimg = affineremap(id.ukn.filepath, id.trans, outdir=tmpdir)
+        aligned_images.append(alignedimg)
 
-aligned_images = sorted(glob(tmpdir+"/*_affineremap.fits"))
 ```
 
 ## About
