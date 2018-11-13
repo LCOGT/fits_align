@@ -3,11 +3,11 @@ from setuptools import setup
 
 setup(
     name='fits_align',
-    version='0.4.1',
+    version='0.4.2',
     packages=['fits_align'],
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    description="Align a sequence of astronomical FITS files based on sources extracted in each image. The aligned files will be geometrically reprojected so all the images are the same size and shape."
+    description="Align a sequence of astronomical FITS files based on sources extracted in each image. The aligned files will be geometrically reprojected so all the images are the same size and shape.",
     author='Edward Gomez',
     install_requires=[
         'astropy',

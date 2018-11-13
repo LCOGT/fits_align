@@ -215,13 +215,11 @@ def readmancat(mancatfilepath, verbose="True"):
     return table
 
 
-def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm=2.0, propfields=[]):
+def readsexcat(mycat):
     """
-    sexcat is either a string (path to a file), or directly an asciidata catalog object as returned by pysex
+    :param cat: Catalogue from HDU[2]
 
-    :param hdu: The hdu containing the science data from which I should build the catalog. 0 will select the only available extension. If multihdu, 1 is usually science.
-
-    We read a sextractor catalog with astroasciidata and return a list of stars.
+    We read a sextractor catalog from hdu[2] and return a list of stars.
     Minimal fields that must be present in the catalog :
 
         * X
@@ -229,68 +227,28 @@ def readsexcat(sexcat, hdu=0, verbose=True, maxflag = 3, posflux = True, minfwhm
         * FWHM
         * ELLIPTICITY
         * FLUX
-        * FLAG
-
-    maxflag : maximum value of the FLAGS that you still want to keep. Sources with higher values will be skipped.
-        * FLAG == 0 : all is fine
-        * FLAG == 2 : the flux is blended with another one; further info in the sextractor manual.
-        * FLAG == 4    At least one pixel of the object is saturated (or very close to)
-        * FLAG == 8    The object is truncated (too close to an image boundary)
-        * FLAG is the sum of these ...
-
-    posflux : if True, only stars with positive FLUX_AUTO are included.
-
-    propfields : list of FIELD NAMES to be added to the props of the stars.
-
-    I will always add FLAGS as a propfield by default.
 
     """
     returnlist = []
 
-    if isinstance(sexcat, str):
-
-        if not os.path.isfile(sexcat):
-            logger.error("Sextractor catalog does not exist :")
-            logger.error(sexcat)
-            sys.exit(1)
-
-        logger.info("Reading %s " % (os.path.split(sexcat)[1]))
-        mycat = ascii.read(sexcat)
-
-    else: # then it's already a asciidata object
-        mycat = sexcat
-
     # We check for the presence of required fields :
-    minimalfields = ["X", "Y", "FWHM", "ELLIPTICITY", "FLUX", "FLAG"]
-    minimalfields.extend(propfields)
+    minimalfields = ["x", "y", "fwhm", "ellipticity", "flux"]
     for field in minimalfields:
         if field not in mycat.columns.names:
-            logger.error("Field %s not available in your catalog file !" % (field))
+            logger.error("Field %s not available in catalog extension of file !" % (field))
             sys.exit(1)
 
     logger.info("Number of sources in catalog : %i" % (len(mycat)))
-
-
-    propfields.append("FLAG")
-    propfields = list(set(propfields))
 
     if len(mycat) == 0:
         logger.error("No stars in the catalog :-(")
     else :
         for i, mc in enumerate(mycat) :
-            if mycat['FLAG'][i] > maxflag :
-                continue
             flux = mycat['FLUX'][i]
-            if posflux and (flux < 0.0) :
-                continue
             fwhm = mycat['FWHM'][i]
-            if float(fwhm) <= minfwhm:
-                continue
-
-            props = dict([[propfield, mycat[propfield][i]] for propfield in propfields])
 
             newstar = Star(x = mycat['X'][i], y = mycat['Y'][i], name = str(i), flux=flux,
-                    props = props, fwhm = mycat['FWHM'][i], elon = mycat['ELLIPTICITY'][i])
+                    fwhm = mycat['FWHM'][i], elon = mycat['ELLIPTICITY'][i])
 
             returnlist.append(newstar)
 

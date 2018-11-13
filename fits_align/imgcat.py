@@ -76,7 +76,7 @@ class ImgCat:
             maxflag = 3
         else:
             maxflag = 7
-        self.starlist = star.sortstarlistbyflux(star.readsexcat(self.cat, hdu=self.hdu, maxflag=maxflag, verbose=verbose))[:n]
+        self.starlist = star.sortstarlistbyflux(star.readsexcat(mycat=self.cat))[:n]
         (xmin, xmax, ymin, ymax) = star.area(self.starlist, border=0.01)
         self.xlim = (xmin, xmax)
         self.ylim = (ymin, ymax)
