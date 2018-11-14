@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='fits_align',
-    version='0.4.2',
+    version='0.4.3',
     packages=['fits_align'],
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',

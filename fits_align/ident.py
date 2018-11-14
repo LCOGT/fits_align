@@ -166,56 +166,6 @@ class Identification:
         logger.debug("Computed flux ratio from %i matches : median %.2f, std %.2f" % (len(reffluxes), self.medfluxratio, self.stdfluxratio))
 
 
-
-    def showmatch(self, show=False, verbose=True):
-        """
-        A plot of the transformed stars and the candidate quad
-        """
-        if self.ok == False:
-            return
-        logger.debug("Plotting match ...")
-        import matplotlib.pyplot as plt
-        #import matplotlib.patches
-        #import matplotlib.collections
-
-        plt.figure(figsize=(10, 10))
-
-        # The ref in black
-        a = star.listtoarray(self.ref.starlist, full=True)
-        plt.scatter(a[:,0], a[:,1], s=2.0, color="black")
-        a = star.listtoarray(self.refmatchstars, full=True)
-        plt.scatter(a[:,0], a[:,1], s=10.0, color="black")
-
-        # The ukn in red
-        a = star.listtoarray(self.trans.applystarlist(self.ukn.starlist), full=True)
-        plt.scatter(a[:,0], a[:,1], s=2.0, color="red")
-        a = star.listtoarray(self.trans.applystarlist(self.uknmatchstars), full=True)
-        plt.scatter(a[:,0], a[:,1], s=6.0, color="red")
-
-        # The quad
-
-        polycorners = star.listtoarray(self.cand["refquad"].stars)
-        polycorners = imgcat.ccworder(polycorners)
-        plt.fill(polycorners[:,0], polycorners[:,1], alpha=0.1, ec="none", color="red")
-
-        plt.xlim(self.ref.xlim)
-        plt.ylim(self.ref.ylim)
-        plt.title("Match of %s" % (str(self.ukn.name)))
-        plt.xlabel("ref x")
-        plt.ylabel("ref y")
-        ax = plt.gca()
-        ax.set_aspect('equal', 'datalim')
-
-        if show:
-            plt.show()
-        else:
-            if not os.path.isdir("alipy_visu"):
-                os.makedirs("alipy_visu")
-            plt.savefig(os.path.join("alipy_visu", self.ukn.name + "_match.png"))
-
-
-
-
 def make_transforms(ref, ukns, hdu=0, skipsaturated=False, r = 5.0, n=500):
     """
     Top-level function to identify transforms between images.
