@@ -210,5 +210,8 @@ def make_transforms(ref, ukns, hdu=0, skipsaturated=False, r = 5.0, n=500):
         idn.calcfluxratio()
         identifications.append(idn)
 
+    del ukns
+    del idn
+    del ref
 
     return identifications

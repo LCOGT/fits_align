@@ -63,6 +63,7 @@ def affineremap(filepath, transform, outdir = "alipy_out", hdu=0, verbose=True):
 
 
     tofits(alifilepath, data, hdr = hdr)
+    del data
     return alifilepath
 
 
@@ -96,7 +97,7 @@ def fromfits(infilename, hdu = 0, verbose = True):
     hdr = hdul[1].header
     pixelarrayshape = pixelarray.shape
     logger.debug("FITS import (%i, %i) BITPIX %s / %s" % (pixelarrayshape[0], pixelarrayshape[1], hdr["BITPIX"], str(pixelarray.dtype.name)))
-
+    del hdul
     return pixelarray, hdr
 
 def tofits(outfilename, pixelarray, hdr = None, verbose = True):
@@ -120,6 +121,8 @@ def tofits(outfilename, pixelarray, hdr = None, verbose = True):
         hdu = fits.PrimaryHDU(pixelarray.transpose(), hdr)
 
     hdu.writeto(outfilename)
-
     logger.debug("Wrote %s" % outfilename)
+
+    del hdu
+    del pixelarray
     return True

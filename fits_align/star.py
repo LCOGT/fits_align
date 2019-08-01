@@ -389,7 +389,7 @@ def fitstars(uknstars, refstars, verbose=True):
     if len(uknstars) == 2:
         trans = np.linalg.solve(ukn, ref)
     else:
-        trans = np.linalg.lstsq(ukn, ref)[0]
+        trans = np.linalg.lstsq(ukn, ref,rcond=None)[0]
 
     return SimpleTransform(np.asarray(trans))
 
@@ -433,6 +433,8 @@ def identify(uknstars, refstars, trans=None, r=5.0, getstars=False):
         else:
             pass # Then there is a companion, we skip it.
 
+    del dists
+    del ukn
     logger.debug("Filtered for companions, keeping %i/%i matches" % (len(matchuknstars), np.sum(minok)))
 
     if getstars==True:
