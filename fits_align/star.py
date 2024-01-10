@@ -233,7 +233,7 @@ def readsexcat(mycat):
 
     # We check for the presence of required fields :
     minimalfields = ["x", "y", "fwhm", "ellipticity", "flux"]
-    colnames = [x.lower() for x in mycat.columns.names]
+    colnames = [x.lower() for x in mycat.names]
     for field in minimalfields:
         if field not in colnames:
             logger.error("Field %s not available in catalog extension of file !" % (field))

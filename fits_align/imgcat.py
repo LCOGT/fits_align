@@ -65,9 +65,10 @@ class ImgCat:
             self.xlim[1] - self.xlim[0], self.ylim[1] - self.ylim[0],
             len(self.starlist), len(self.quadlist), self.quadlevel)
 
-    def makecat(self, rerun=True, keepcat=False, verbose=True):
-        hdu = fits.open(self.filepath)
-        self.cat = hdu[2].data
+    def makecat(self, rerun=True, keepcat=False, verbose=True, hdu='CAT'):
+        with fits.open(self.filepath) as hdul:
+            self.cat = hdul[hdu].data
+        return
 
 
     def makestarlist(self, skipsaturated=False, n=200, verbose=True):

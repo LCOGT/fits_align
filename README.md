@@ -9,7 +9,6 @@ It is designed to work exclusively with reduced data from [Las Cumbres Observato
 Download this repository :
 `python setup.py install`
 
-
 ## Example usage
 
 ```python
@@ -31,7 +30,6 @@ for id in identifications:
     if id.ok:
         alignedimg = affineremap(id.ukn.filepath, id.trans, outdir=tmpdir)
         aligned_images.append(alignedimg)
-
 ```
 
 ## About
