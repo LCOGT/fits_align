@@ -2,7 +2,7 @@
 
 Align a sequence of astronomical FITS files based on sources extracted in each image. The aligned files will be geometrically reprojected so all the images are the same size and shape.
 
-It is designed to work exclusively with reduced data from [Las Cumbres Observatory](https://lco.global). FITS data from LCO is [Rice compressed](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) and contains sources extracted using [SEP](https://sep.readthedocs.io/en/v1.0.x/) during our data pipeline processing.
+It is designed to work exclusively with reduced data from [Las Cumbres Observatory](https://lco.global). FITS data from LCO is [Rice compressed](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) and contains sources extracted using [SEP](https://sep.readthedocs.io/en/v1.0.x/) during our data pipeline processing in a catalog (`CAT`) FITS Header Data Unit (HDU).
 
 ## Installation
 
@@ -31,6 +31,8 @@ for id in identifications:
         alignedimg = affineremap(id.ukn.filepath, id.trans, outdir=tmpdir)
         aligned_images.append(alignedimg)
 ```
+
+If you have FITS files *without* image data
 
 ## About
 
