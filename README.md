@@ -24,7 +24,10 @@ ref_image = img_list[0]
 images_to_align = img_list[1:]
 
 identifications = make_transforms(ref_image, images_to_align)
+```
+If you have FITS files with image data you could use the following to reproject them.
 
+```python
 aligned_images = [ref_image]
 for id in identifications:
     if id.ok:
@@ -32,7 +35,23 @@ for id in identifications:
         aligned_images.append(alignedimg)
 ```
 
-If you have FITS files *without* image data
+If you just have FITS files which contain on photometry catalogues, which have pixel coordinate values (e.g. x, y) that you want to align (ie. no image data):
+
+```python
+import pandas as pd
+
+identifications = make_transforms(img_list[0], img_list[1:], hdu='CAT')
+catalogues = []
+for i, catfile in enumerate(img_list):
+    with fits.open(catfile) as hdul:
+        data = pd.DataFrame.from_records(hdul['CAT'].data)
+        if i != 0:
+            (matrix, offset) = identifications[i-1].trans.matrixform()
+            newcoords = np.dot(data[['x','y']], matrix) + offset
+            (x,y) = np.transpose(newcoords)
+            data.update({'x':x, 'y':y})
+        catalogues.append(data)
+```
 
 ## About
 
