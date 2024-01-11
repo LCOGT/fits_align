@@ -2,7 +2,7 @@
 
 Align a sequence of astronomical FITS files based on sources extracted in each image. The aligned files will be geometrically reprojected so all the images are the same size and shape.
 
-It is designed to work exclusively with reduced data from [Las Cumbres Observatory](https://lco.global). FITS data from LCO is [Rice compressed](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) and contains sources extracted using [SEP](https://sep.readthedocs.io/en/v1.0.x/) during our data pipeline processing in a catalog (`CAT`) FITS Header Data Unit (HDU).
+It is designed to work exclusively with reduced data from [Las Cumbres Observatory](https://lco.global). FITS data from LCO is [Rice compressed](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) and contains sources extracted using [SEP](https://sep.readthedocs.io/en/v1.0.x/) during our data pipeline processing in a catalogue (`CAT`) FITS Header Data Unit (HDU).
 
 ## Installation
 
@@ -51,6 +51,14 @@ for i, catfile in enumerate(img_list):
             (x,y) = np.transpose(newcoords)
             data.update({'x':x, 'y':y})
         catalogues.append(data)
+```
+
+## HDU containing catalogues
+
+If you are using a none standard place for your catalogue HDU, that can be passed in a parameter to the `make_transforms()` function i.e.
+
+```
+identifications = make_transforms(ref_image, images_to_align, hdu=0)
 ```
 
 ## About
